@@ -433,6 +433,30 @@ class AmgScenarioTest(ScenarioTest):
                 self.check("length([?uid == '{dashboardUid}'])", 1)
             ])
 
+    @ResourceGroupPreparer(name_prefix='cli_test_amg')
+    def test_amg_managed_private_endpoint(self, resource_group):
+
+        self.kwargs.update({
+            'name': 'clitestamgmpe',
+            'location': 'westcentralus',
+            'monitor_name': 'clitestamgmonitor',
+            'mpe_name': 'clitestmpe',
+            'sub': self.get_subscription_id(),
+        })
+
+        owner = self._get_signed_in_user()
+        self.recording_processors.append(MSGraphNameReplacer(owner, MOCKED_USER_NAME))
+
+        with unittest.mock.patch('azext_amg.custom._gen_guid', side_effect=self.create_guid):
+            # Create AMG instance
+            self.cmd('grafana create -g {rg} -n {name} -l {location} --tags foo=doo')
+            time.sleep(120)
+
+            self.cmd('monitor account create -n {monitor_name} -g {rg} -l {location}')
+
+            # Create managed private endpoint from AMG instance to azure monitor workspace
+            self.cmd('grafana managed-private-endpoint create -g {rg} --workspace-name {name} -n {mpe_name} -l {location} --group-ids prometheusMetrics --private-link-resource-region {location} --private-link-resource-id /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Monitor/accounts/{monitor_name}')
+
     def _get_signed_in_user(self):
         account_info = self.cmd('account show').get_output_in_json()
         if account_info['user']['type'] == 'user':
