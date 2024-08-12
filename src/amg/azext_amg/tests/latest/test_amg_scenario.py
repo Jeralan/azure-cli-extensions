@@ -464,6 +464,33 @@ class AmgScenarioTest(ScenarioTest):
             # Create managed private endpoint from AMG instance to azure monitor workspace
             self.cmd('grafana managed-private-endpoint create -g {rg} --workspace-name {name} -n {mpe_name} -l {location} --group-ids prometheusMetrics --private-link-resource-region {location} --private-link-resource-id /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Monitor/accounts/{monitor_name}')
 
+            # Check if in mpe list
+            self.cmd('grafana managed-private-endpoint list -g {rg} --workspace-name {name}', checks=[
+                self.check('length([])', 1)
+            ])
+
+            # Check if in mpe show
+            self.cmd('grafana managed-private-endpoint show -g {rg} --workspace-name {name} -n {mpe_name}', checks=[
+                self.check('name', '{mpe_name}')
+            ])
+
+            # mpe refresh
+
+            # Check mpe delete
+            self.cmd('grafana managed-private-endpoint delete -g {rg} --workspace-name {name} -n {mpe_name} --yes')
+
+            # pec delete
+
+            # pec list
+
+            # pec show
+
+            # pec update
+
+            # pl link
+
+            # pl show
+
     def _get_signed_in_user(self):
         account_info = self.cmd('account show').get_output_in_json()
         if account_info['user']['type'] == 'user':
